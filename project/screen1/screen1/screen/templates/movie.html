@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel = 'stylesheet' href = '/static/css/movie.css/'>
+  <title>MOVIE PICK | 영화 추천</title>
+
+</head>
+<body>
+  <header>
+    <div class="logo">MOVIE PICK</div>
+    <nav><a href="#" class="active" data-filter="all">전체</a><a href="#" data-filter="영화">영화</a><a href="#" data-filter="애니메이션">애니메이션</a></nav>
+    <form class="search" id="searchForm">
+      <select id="searchType" aria-label="검색 조건 선택">
+        <option value="all">전체검색</option>
+        <option value="title">제목 검색</option>
+        <option value="genre">장르 검색</option>
+        <option value="summary">줄거리 검색</option>
+      </select>
+      <input type="search" id="searchInput" placeholder="검색어를 입력하세요" aria-label="영화 검색어">
+      <button type="submit">검색</button>
+    </form>
+  </header>
+  <main>
+    <div class="intro"><h1>오늘은 어떤 영화를 볼까요? 🍿</h1><p>취향에 맞는 영화를 골라보세요.</p></div>
+    <section><h2 id="sectionTitle">🎬 추천 영화</h2><div class="movie-grid" id="movieGrid"></div><p class="empty" id="emptyMessage">검색 결과가 없습니다. 다른 검색어나 검색 조건을 선택해 보세요.</p></section>
+  </main>
+  <script>
+    // 예제 영화 목록: 포스터는 TMDB 공개 이미지 URL을 사용합니다.
+    const movies = [
+      { title: '인셉션', year: 2010, genre: 'SF · 액션', type: '영화', summary: '다른 사람의 꿈속에 들어가 생각을 훔치는 도둑이 마지막 임무에 도전한다.', poster: 'https://image.tmdb.org/t/p/w500/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg' },
+      { title: '인터스텔라', year: 2014, genre: 'SF · 드라마', type: '영화', summary: '식량 위기에 처한 지구를 떠나 우주에서 인류가 살아갈 새로운 행성을 찾는다.', poster: 'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg' },
+      { title: '다크 나이트', year: 2008, genre: '액션 · 범죄', type: '영화', summary: '고담시의 영웅 배트맨이 범죄자 조커와 맞서 도시를 지키려 한다.', poster: 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg' },
+      { title: '기생충', year: 2019, genre: '드라마 · 스릴러', type: '영화', summary: '가난한 가족이 부유한 집에 하나씩 취업하며 예상치 못한 사건에 휘말린다.', poster: 'https://image.tmdb.org/t/p/w500/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg' },
+      { title: '어벤져스: 엔드게임', year: 2019, genre: '액션 · SF', type: '영화', summary: '사라진 우주의 생명들을 되찾기 위해 슈퍼히어로들이 마지막 전투를 준비한다.', poster: 'https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg' },
+      { title: '센과 치히로의 행방불명', year: 2001, genre: '판타지 · 모험', type: '애니메이션', summary: '신비한 세계에 들어간 소녀 치히로가 부모를 구하기 위해 온천장에서 일한다.', poster: 'https://image.tmdb.org/t/p/w500/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg' },
+      { title: '너의 이름은.', year: 2016, genre: '로맨스 · 판타지', type: '애니메이션', summary: '서로의 몸이 바뀌는 경험을 한 두 청소년이 시간과 거리를 넘어 서로를 찾는다.', poster: 'https://image.tmdb.org/t/p/w500/q719jXXEzOoYaps6babgKnONONX.jpg' },
+      { title: '토이 스토리', year: 1995, genre: '가족 · 모험', type: '애니메이션', summary: '장난감 우디와 버즈가 우정을 쌓으며 주인에게 돌아가기 위한 모험을 떠난다.', poster: 'https://image.tmdb.org/t/p/w500/uXDfjJbdP4ijW5hWSBrPrlKpxab.jpg' },
+      { title: '업', year: 2009, genre: '가족 · 모험', type: '애니메이션', summary: '노인 칼이 풍선으로 집을 띄워 남아메리카로 여행을 떠나고 소년 러셀과 모험한다.', poster: 'https://image.tmdb.org/t/p/w500/mFvoEwSfLqbcWwFsDjQebn9bzFe.jpg' },
+      { title: '월-E', year: 2008, genre: 'SF · 가족', type: '애니메이션', summary: '쓰레기로 뒤덮인 지구에 홀로 남은 로봇 월이가 우주에서 온 로봇 이브를 만난다.', poster: 'https://image.tmdb.org/t/p/w500/hbhFnRzzg6ZDmm8YAmxBnQpQIPh.jpg' }
+    ];
+
+    const movieGrid = document.getElementById('movieGrid');
+    const searchInput = document.getElementById('searchInput');
+    const searchType = document.getElementById('searchType');
+    const emptyMessage = document.getElementById('emptyMessage');
+    const sectionTitle = document.getElementById('sectionTitle');
+    let selectedType = 'all';
+
+    function showMovies() {
+      const keyword = searchInput.value.trim().toLocaleLowerCase();
+      const field = searchType.value;
+      const filtered = movies.filter(movie => {
+        const fields = field === 'all'
+          ? [movie.title, movie.genre, movie.summary]
+          : [movie[field]];
+        const matchesKeyword = fields.some(text => text.toLocaleLowerCase().includes(keyword));
+        return (selectedType === 'all' || movie.type === selectedType) && matchesKeyword;
+      });
+      movieGrid.innerHTML = '';
+      filtered.forEach(movie => {
+        const card = document.createElement('article');
+        card.className = 'movie';
+        card.innerHTML = `<div class="poster"><img src="${movie.poster}" alt="${movie.title} 포스터" loading="lazy" onerror="this.style.display='none';this.parentElement.textContent='포스터 준비 중';this.parentElement.style.display='grid';this.parentElement.style.placeItems='center';"></div><h3>${movie.title}</h3><p>${movie.year} · ${movie.genre}</p><p class="synopsis">${movie.summary}</p>`;
+        movieGrid.appendChild(card);
+      });
+      emptyMessage.style.display = filtered.length ? 'none' : 'block';
+      sectionTitle.textContent = keyword ? `🔎 검색 결과 (${filtered.length})` : '🎬 추천 영화';
+    }
+
+    document.getElementById('searchForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      showMovies();
+    });
+    searchInput.addEventListener('input', showMovies);
+    searchType.addEventListener('change', function() {
+      const hints = { all: '제목, 장르, 줄거리 검색', title: '영화 제목 입력', genre: '예: SF, 액션, 로맨스', summary: '예: 우주, 꿈, 가족' };
+      searchInput.placeholder = hints[this.value];
+      showMovies();
+    });
+    document.querySelectorAll('nav a').forEach(link => {
+      link.addEventListener('click', function(event) {
+        event.preventDefault();
+        selectedType = this.dataset.filter;
+        document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+        this.classList.add('active');
+        showMovies();
+      });
+    });
+    showMovies();
+  </script>
+</body>
+</html>
