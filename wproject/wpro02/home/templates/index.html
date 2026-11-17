@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script  src="http://code.jquery.com/jquery-latest.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        function inputBtn(){
+            const input_data = $('#data').val();
+            console.log('데이터 확인 : '+input_data)
+            $.ajax({
+                url:'/board/ajax_data/',
+                type:'post',
+                headers : {'X-CSRFToken':'{{csrf_token}}'},
+                data : {'data':input_data},
+                dataType:'json',
+                success:function(data){ //result,result2,result3
+                    alert('성공')
+                    $('#result1').text(input_data)  //입력값
+                    $('#result2').text(data.result) // 예측생선
+                    $('#result3').text(data.result2*100)    //예측확률
+                    $('#result4').text(data.result3)        //전체생선확률
+
+
+                  //그래프 생성
+                    const ctx = document.getElementById('myChart');
+
+                    let chartStatus = Chart.getChart("myChart");
+                    if(chartStatus != undefined){
+                        console.log("success");
+                        chartStatus.destroy(); //리셋
+                    }
+
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                        labels: ['Bream','Parkki','Perch','Pike','Roach','Smelt','Whitefish'],
+                        datasets: [{
+                            label: '예측생선',
+                            data: [data.result3[0],data.result3[1],data.result3[2],data.result3[3],data.result3[4],data.result3[5],data.result3[6]],
+                            borderWidth: 1,
+                            barThickness:50 //막대두께 50px 고정
+                        }]
+                        },
+                        options: {
+                        scales: {
+                            y: {
+                            beginAtZero: true
+                            }
+                        }
+                        }
+    });
+
+                },
+                fail:function(){
+                    alert('예측하는데 오류가 발생했습니다. 다시 시도해주세요.')
+
+                }
+
+
+
+
+
+            })//ajax
+        }//inputBtn()
+
+    </script>
+    <title>메인페이지</title>
+</head>
+<body>
+    <h2>메인화면</h2>
+    <label>생선의 무게, 길이,대각선, 높이, 넓이를 입력하시오.</label>
+    <br>
+    <input type="test" name="data" id="data">
+    <button type="button" onclick="inputBtn()">확인</button>
+    <div>입력값 :<span id="result1"> </span></div>
+    <div>예측생선 :<span id="result2"> </span></div>
+    <div>예측확률 :<span id="result3"> </span></div>
+    <div>전체확률 :<span id="result4"> </span></div>
+
+
+        <!-- 그래프 -->
+            <div style="width:700px; height:350px;">
+                <canvas id="myChart"></canvas>
+            </div>
+    <!-- 그래프 -->
+</body>
+</html>
